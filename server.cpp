@@ -69,8 +69,11 @@ int openSrvSocket ( const char * name, int port )
    return fd;
  }
 
-void brightnessReply(int sockFD) {
-    char buffer [27] = {0x01, 0x30, 0x30, 'A', 'D', '1', '2',
+void getBrightnessReply(int sockFD) {
+    char buffer [27] = {0x01, 0x30, 0x30,
+                        'A',//monitor ID
+                        'D',//message type
+                        '1', '2', //message length
                         0x02, //STX
                         '0', '0', // result
                         '0', '0', '1', '0', // opCodePage and opCode
@@ -81,8 +84,24 @@ void brightnessReply(int sockFD) {
                         'X',   // check code,
                         0x0D}; // delimiter
       write ( sockFD, buffer, 27 );
-    
 }
+void setBrightnessReply(int sockFD) {
+    char buffer [27] = {0x01, 0x30, 0x30,
+                        'A',//monitor ID
+                        'F',//message type
+                        '1', '2', //message length
+                        0x02, //STX
+                        '0', '0', // result
+                        '0', '0', '1', '0', // opCodePage and opCode
+                        '0', '0', //operation type code
+                        '0', '0', '6', '4', //max value
+                        '0', '0', '5', '0', //current value
+                        0x03, // ETX
+                        'X',   // check code,
+                        0x0D}; // delimiter
+      write ( sockFD, buffer, 27 );
+}
+
 /* obsluha jednoho klienta (vsechny jeho zpravy)
  */
 void * serveClient ( TThr * thrData )
@@ -98,7 +117,7 @@ void * serveClient ( TThr * thrData )
       printf("\n");
       printf("---------------------\n");
       
-      brightnessReply(thrData->m_DataFd);
+      setBrightnessReply(thrData->m_DataFd);
       // spojeni nebylo ukonceno, jeste mohou prijit dalsi data.
     }
 //   printf("\n"); //needed to flush the output stream (ONLY FOR DEBUG)
