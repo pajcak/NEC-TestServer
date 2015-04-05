@@ -101,23 +101,42 @@ void setBrightnessReply(int sockFD) {
                         0x0D}; // delimiter
       write ( sockFD, buffer, 27 );
 }
+void saveCurrentSettingsReply(int sockFD) {
+    char buffer [15] = {0x01, 0x30, 0x30,
+                        'A',//monitor ID
+                        'B',//message type
+                        '0', '6', //message length
+                        0x02, //STX
+                        '0', '0', 
+                        '0', 'C', // command code
+                        0x03, // ETX
+                        'X',   // check code,
+                        0x0D}; // delimiter
+      write ( sockFD, buffer, 15 );
+}
 
 /* obsluha jednoho klienta (vsechny jeho zpravy)
  */
-void * serveClient ( TThr * thrData )
- {
-   char buffer[200];
-   while ( 1 )
-    {
-      int l = read ( thrData -> m_DataFd, buffer, sizeof ( buffer ));
+bool readNPrintData(int sockFD) {
+      char buffer[200];
+      int l = read ( sockFD, buffer, sizeof ( buffer ));
       // nulova delka -> uzavreni spojeni klientem
-      if ( ! l ) break;
+      if ( ! l ) return false;
       printf("---------------------\n");
       for ( int i = 0; i < l; i ++ ) printf("0x%02x(%c)|", buffer[i], buffer[i]);
       printf("\n");
       printf("---------------------\n");
-      
-      setBrightnessReply(thrData->m_DataFd);
+      return true;
+}
+void * serveClient ( TThr * thrData )
+ {
+   while ( 1 )
+    {
+        if (!readNPrintData(thrData->m_DataFd)) break;
+        setBrightnessReply(thrData->m_DataFd);
+       
+        if (!readNPrintData(thrData->m_DataFd)) break;
+        saveCurrentSettingsReply(thrData->m_DataFd);
       // spojeni nebylo ukonceno, jeste mohou prijit dalsi data.
     }
 //   printf("\n"); //needed to flush the output stream (ONLY FOR DEBUG)
@@ -134,7 +153,7 @@ int main ( int argc, char ** argv )
    int fd = openSrvSocket ( "localhost", 12345);
    if ( fd < 0 ) return 1;
    
-   printf("Server v1.2\n");
+   printf("Server v1.3\n");
    pthread_attr_t attr;
    pthread_attr_init ( &attr );
    pthread_attr_setdetachstate ( &attr, PTHREAD_CREATE_DETACHED );
