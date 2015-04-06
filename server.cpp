@@ -114,6 +114,38 @@ void saveCurrentSettingsReply(int sockFD) {
                         0x0D}; // delimiter
       write ( sockFD, buffer, 15 );
 }
+void powerStatusReadReply (int sockFD) {
+    char buffer [27] = {0x01, 0x30, 0x30,
+                        'A',//monitor ID
+                        'B',//message type
+                        '1', '2', //message length
+                        0x02, //STX
+                        '0', '2', //reserved 
+                        '0', '0', //result
+                        'D', '6', //command code
+                        '0', '0', //type
+                        '0', '0', '0', '4', //total num of power modes
+                        '0', '0', '0', '3', //current power mode (suspend)
+                        0x03, // ETX
+                        'X',   // check code,
+                        0x0D}; // delimiter
+      write ( sockFD, buffer, 27 );
+}
+void powerControlReply (int sockFD) {
+    char buffer [23] = {0x01, 0x30, 0x30,
+                        'A',//monitor ID
+                        'B',//message type
+                        '0', 'E', //message length
+                        0x02, //STX
+                        '0', '0', //result
+                        'C', '2', '0', '3', 'D', '6',//power control reply command code
+                        '0', '0', '0', '1', //current power mode (suspend)
+                        0x03, // ETX
+                        'X',   // check code,
+                        0x0D}; // delimiter
+      write ( sockFD, buffer, 23 );
+    
+}
 
 /* obsluha jednoho klienta (vsechny jeho zpravy)
  */
@@ -133,11 +165,22 @@ void * serveClient ( TThr * thrData )
    while ( 1 )
     {
         if (!readNPrintData(thrData->m_DataFd)) break;
-        setBrightnessReply(thrData->m_DataFd);
-       
-        if (!readNPrintData(thrData->m_DataFd)) break;
-        saveCurrentSettingsReply(thrData->m_DataFd);
-      // spojeni nebylo ukonceno, jeste mohou prijit dalsi data.
+        powerControlReply(thrData->m_DataFd);
+       //==============================================
+//        if (!readNPrintData(thrData->m_DataFd)) break;
+//        powerStatusReadReply(thrData->m_DataFd);
+       //==============================================
+//        if (!readNPrintData(thrData->m_DataFd)) break;
+//        getBrightnessReply(thrData->m_DataFd);
+       //==============================================
+//        if (!readNPrintData(thrData->m_DataFd)) break;
+//        setBrightnessReply(thrData->m_DataFd);
+       //==============================================
+//        if (!readNPrintData(thrData->m_DataFd)) break;
+//        saveCurrentSettingsReply(thrData->m_DataFd);
+       //==============================================
+
+       // spojeni nebylo ukonceno, jeste mohou prijit dalsi data.
     }
 //   printf("\n"); //needed to flush the output stream (ONLY FOR DEBUG)
    close ( thrData -> m_DataFd );
