@@ -1,4 +1,17 @@
-/*CLASS LCD MONITOR*/
+//    File: server.cpp
+//    Copyright (C) 2015  Patrik Faistaver
+//    
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+
 #include <cstdio>
 #include <cstring>
 #include <cctype>
@@ -69,7 +82,7 @@ int openSrvSocket ( const char * name, int port )
    return fd;
  }
 
-void getBrightnessReply(int sockFD) {
+void getBacklightReply(int sockFD) {
     char buffer [27] = {0x01, 0x30, 0x30,
                         'A',//monitor ID
                         'D',//message type
@@ -85,7 +98,7 @@ void getBrightnessReply(int sockFD) {
                         0x0D}; // delimiter
       write ( sockFD, buffer, 27 );
 }
-void setBrightnessReply(int sockFD) {
+void setBacklightReply(int sockFD) {
     char buffer [27] = {0x01, 0x30, 0x30,
                         'A',//monitor ID
                         'F',//message type
@@ -139,7 +152,7 @@ void powerControlReply (int sockFD) {
                         0x02, //STX
                         '0', '0', //result
                         'C', '2', '0', '3', 'D', '6',//power control reply command code
-                        '0', '0', '0', '1', //current power mode (suspend)
+                        '0', '0', '0', '1', //current power mode (ON)
                         0x03, // ETX
                         'X',   // check code,
                         0x0D}; // delimiter
@@ -164,17 +177,17 @@ void * serveClient ( TThr * thrData )
  {
    while ( 1 )
     {
-        if (!readNPrintData(thrData->m_DataFd)) break;
-        powerControlReply(thrData->m_DataFd);
+//        if (!readNPrintData(thrData->m_DataFd)) break;
+//        powerControlReply(thrData->m_DataFd);
        //==============================================
 //        if (!readNPrintData(thrData->m_DataFd)) break;
 //        powerStatusReadReply(thrData->m_DataFd);
        //==============================================
-//        if (!readNPrintData(thrData->m_DataFd)) break;
-//        getBrightnessReply(thrData->m_DataFd);
+        if (!readNPrintData(thrData->m_DataFd)) break;
+        getBacklightReply(thrData->m_DataFd);
        //==============================================
 //        if (!readNPrintData(thrData->m_DataFd)) break;
-//        setBrightnessReply(thrData->m_DataFd);
+//        setBacklightReply(thrData->m_DataFd);
        //==============================================
 //        if (!readNPrintData(thrData->m_DataFd)) break;
 //        saveCurrentSettingsReply(thrData->m_DataFd);
